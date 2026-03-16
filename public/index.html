@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPDF Summary</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                SmartPDF Summary
+            </div>
+            <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
+                <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </header>
+
+        <main>
+            <!-- Toast Notifications -->
+            <div id="toast-container"></div>
+
+            <!-- View 1: Landing / Upload -->
+            <section id="view-upload" class="view active">
+                <div class="hero-text">
+                    <h1>Understand any document in seconds.</h1>
+                    <p>Upload your PDF and let our AI generate a clear, structured summary instantly.</p>
+                </div>
+
+                <div class="upload-area" id="drop-zone">
+                    <input type="file" id="file-input" accept="application/pdf" hidden>
+                    <div class="upload-content">
+                        <div class="upload-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        </div>
+                        <h3>Upload a PDF</h3>
+                        <p class="upload-hint">Drag & drop your file here or click to browse</p>
+                        <p class="upload-limits">Max file size: 50MB</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View 2: Processing -->
+            <section id="view-processing" class="view hidden">
+                <div class="processing-container">
+                    <div class="ai-spinner">
+                        <div class="circle outer"></div>
+                        <div class="circle inner"></div>
+                        <div class="core"></div>
+                    </div>
+                    <h2>Analyzing your document with AI</h2>
+                    <p class="processing-status" id="processing-status">Extracting text...</p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View 3: Results -->
+            <section id="view-results" class="view hidden">
+                <div class="results-header">
+                    <h2>Summary Results</h2>
+                    <div class="actions">
+                        <button class="action-btn" id="btn-copy">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            Copy
+                        </button>
+                        <button class="action-btn" id="btn-txt">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            TXT
+                        </button>
+                        <button class="action-btn" id="btn-pdf">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="M9 15l3 3 3-3"></path></svg>
+                            PDF
+                        </button>
+                        <button class="action-btn primary" id="btn-new">New PDF</button>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-badge">
+                        <span class="stat-label">Original Extracted:</span>
+                        <span class="stat-value" id="stat-words-org">0</span> words
+                    </div>
+                    <div class="stat-badge">
+                        <span class="stat-label">Summary Length:</span>
+                        <span class="stat-value" id="stat-words-sum">0</span> words
+                    </div>
+                </div>
+
+                <div class="summary-cards">
+                    <!-- Title -->
+                    <div class="card" id="card-title">
+                        <h3 class="card-label">Document Title</h3>
+                        <h2 class="document-title" id="out-title">Loading...</h2>
+                    </div>
+
+                    <!-- Overview -->
+                    <div class="card">
+                        <h3 class="card-label">Overview</h3>
+                        <p id="out-overview">Loading...</p>
+                    </div>
+
+                    <!-- Layout grid for concepts and points -->
+                    <div class="card-grid">
+                        <!-- Key Concepts -->
+                        <div class="card">
+                            <h3 class="card-label">Key Concepts</h3>
+                            <ul class="concept-list" id="out-concepts">
+                                <!-- Populated dynamically -->
+                            </ul>
+                        </div>
+
+                        <!-- Important Points -->
+                        <div class="card">
+                            <h3 class="card-label">Important Points</h3>
+                            <ul class="bullet-list" id="out-points">
+                                <!-- Populated dynamically -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Summary -->
+                    <div class="card">
+                        <h3 class="card-label">Detailed Summary</h3>
+                        <div class="prose" id="out-detailed">
+                            Loading...
+                        </div>
+                    </div>
+
+                    <!-- Conclusion -->
+                    <div class="card highlight-card">
+                        <h3 class="card-label">Conclusion</h3>
+                        <p id="out-conclusion" class="conclusion-text">Loading...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Animated Background Elements -->
+        <div class="bg-blur blob-1"></div>
+        <div class="bg-blur blob-2"></div>
+    </div>
+</body>
+</html>
