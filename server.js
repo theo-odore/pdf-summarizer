@@ -8,7 +8,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
 
 // Middleware
 app.use(cors());
@@ -92,16 +92,16 @@ app.post('/api/summarize', async (req, res) => {
 
         if (chunks.length === 1) {
             // Single request
-            finalSummaryText = await callLocalLLMAPI(chunks[0]);
+            finalSummaryText = await callQwenAPI(chunks[0]);
         } else {
             // Multiple chunks: summarize chunks independently then combine
             const chunkSummaries = await Promise.all(
-                chunks.map((chunk, index) => callLocalLLMAPI(chunk, `Part ${index + 1}`))
+                chunks.map((chunk, index) => callQwenAPI(chunk, `Part ${index + 1}`))
             );
 
             // Final synthesis pass
             const combinedText = chunkSummaries.map(r => JSON.stringify(r)).join('\\n\\n');
-            finalSummaryText = await callLocalLLMAPI(`Synthesize the following partial summaries into one final summary adhering strictly to the required JSON structure:\\n\\n${combinedText}`);
+            finalSummaryText = await callQwenAPI(`Synthesize the following partial summaries into one final summary adhering strictly to the required JSON structure:\\n\\n${combinedText}`);
         }
 
         res.json(finalSummaryText);
@@ -112,40 +112,49 @@ app.post('/api/summarize', async (req, res) => {
     }
 });
 
-// Call Local LLM via Ollama API
-async function callLocalLLMAPI(inputText, partContext = "") {
-    const endpoint = process.env.OLLAMA_URL || 'http://localhost:11434/api/generate';
-    const model = process.env.OLLAMA_MODEL || 'llama3';
+// Call Qwen API
+async function callQwenAPI(inputText, partContext = "") {
+    if (!NVIDIA_API_KEY) {
+        throw new Error("NVIDIA_API_KEY is not set in environment variables.");
+    }
+
+    const endpoint = "https://integrate.api.nvidia.com/v1/chat/completions";
 
     const contextStr = partContext ? `This is ${partContext} of a larger document. ` : '';
-    const fullPrompt = `${SYSTEM_PROMPT}\\n\\n${contextStr}Analyze the following text and return the structured JSON strictly:\\n\\n${inputText}`;
+    const fullPrompt = `${SYSTEM_PROMPT}\n\n${contextStr}Analyze the following text and return the structured JSON strictly:\n\n${inputText}`;
 
     const payload = {
-        model: model,
-        prompt: fullPrompt,
-        stream: false,
-        format: "json",
-        options: {
-            temperature: 0.3
-        }
+        model: "qwen/qwen3.5-122b-a10b",
+        messages: [{"role": "user", "content": fullPrompt}],
+        max_tokens: 8192,
+        temperature: 0.3,
+        top_p: 0.95,
+        stream: false
     };
 
     const response = await axios.post(endpoint, payload, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+            'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
     });
 
-    const outputText = response.data?.response;
+    const outputText = response.data?.choices?.[0]?.message?.content;
 
     if (!outputText) {
-        throw new Error('Invalid response structure from Local LLM');
+        throw new Error('Invalid response structure from Qwen API');
     }
 
     try {
-        // Attempt to parse to ensure it's valid JSON before returning
-        return JSON.parse(outputText);
+        let cleanText = outputText.trim();
+        if (cleanText.startsWith('```')) {
+            cleanText = cleanText.replace(/^```[a-z]*\n/, '').replace(/\n```$/, '').trim();
+        }
+        return JSON.parse(cleanText);
     } catch (e) {
-        console.error("Failed to parse LLM output as JSON", outputText);
-        throw new Error("Local LLM did not return valid JSON");
+        console.error("Failed to parse Qwen output as JSON", outputText);
+        throw new Error("Qwen API did not return valid JSON");
     }
 }
 

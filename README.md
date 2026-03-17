@@ -3,13 +3,13 @@ An elegant, completely offline, and fully automated AI PDF Summarizer.
 
 Built with Node.js, Express, and modern glassmorphism frontend patterns, **SmartPDF Summary** allows you to upload large academic/professional PDF documents and transform them into beautifully structured study cards instantly. 
 
-Powered entirely by local LLMs via **Ollama**, ensuring complete privacy and zero API costs.
+Powered by the immense reasoning capabilities of **Nvidia's Qwen 3.5 122B API**, logically processing massive documents to extract precisely what matters.
 
 ![SmartPDF Summary Interface](assets/landing_page.png)
 
 ## ✨ Features
 - **Modern Minimalist UI**: Sleek dark-mode default, card-based layout, and smooth animations.
-- **100% Offline & Private**: Uses local Llama 3 models via Ollama. No data is sent to the cloud.
+- **Deep Reasoning Processing**: Uses Nvidia's API for the massive Qwen 3.5 (122B) model.
 - **Memory-Safe Extraction**: Parses PDFs cleanly using `pdf-parse` without saving unneeded files to your disk.
 - **Smart Chunking**: Automatically breaks large documents down into contextually aware chunks so that the LLM limit is never overwhelmed.
 - **Semantic Academic Structure**: Tightly prompt-engineered to always output JSON containing:
@@ -27,17 +27,13 @@ Powered entirely by local LLMs via **Ollama**, ensuring complete privacy and zer
 
 ### Prerequisites:
 1. Ensure [Node.js](https://nodejs.org/) (v16+) is installed.
-2. Install [Ollama](https://ollama.com/) natively.
-3. Pull your required model:
-```bash
-ollama run llama3
-```
+2. Get an API Key from Nvidia's API catalog (for Qwen 3.5).
 
 ### Setup:
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/smartpdf-summary.git
-cd smartpdf-summary
+git clone https://github.com/theo-odore/pdf-summarizer.git
+cd pdf-summarizer
 ```
 
 2. Install dependencies:
@@ -45,11 +41,10 @@ cd smartpdf-summary
 npm install
 ```
 
-3. Configure Environment (*Optional*):
-Create a `.env` file in the root directory if you want to use a different local model or URL.
+3. Configure Environment:
+Create a `.env` file in the root directory and add your Nvidia API Key.
 ```env
-OLLAMA_URL=http://localhost:11434/api/generate
-OLLAMA_MODEL=llama3
+NVIDIA_API_KEY=your_actual_api_key_here
 PORT=3000
 ```
 
@@ -67,8 +62,8 @@ npm start
 - **Dependencies**: 
     - `pdf-parse` (v1.1.1) for reliable, clean text extraction.
     - `multer` for memory buffering file uploads.
-    - `axios` for connecting the server logically to Ollama endpoints.
-- **LLM Pipeline**: Ollama (`llama3`).
+    - `axios` for connecting the server logically to the Nvidia API.
+- **LLM Pipeline**: Nvidia API integrating `qwen/qwen3.5-122b-a10b`.
 
 ---
 
